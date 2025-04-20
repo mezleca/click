@@ -21,7 +21,8 @@ configure() {
 
     cmake \
         -DSDL_AUDIO=OFF -DSDL_HAPTIC=OFF -DSDL_JOYSTICK=OFF -DSDL_POWER=OFF -DSDL_SENSOR=OFF \
-        -DSDL_TESTS=OFF -DSDL_INSTALL=OFF -DSDL_STATIC=ON -DSDL_INSTALL_DOCS=OFF \
+        -DSDL_TESTS=OFF -DSDL_INSTALL=OFF -DSDL_STATIC=ON -DSDL_INSTALL_DOCS=OFF -DBUILD_STATIC_LIBS=ON \
+        -DBUILD_SHARED_LIBS=OFF \
         -S $PROJ_DIR -B $BUILD_DIR
     cd ..
 }
@@ -36,7 +37,14 @@ build() {
     fi
 
     cd "$BUILD_DIR" || exit
-    make
+
+    if [ "$1" == true ];
+    then 
+        echo "cleaning..."
+        make clean
+    fi
+
+    make -j4
     cd ..
 }
 
@@ -61,11 +69,14 @@ fi
 
 if [ "$1" == "--configure" ]; then
     configure
-    build
 fi
 
 if [ "$1" == "--build" ]; then
-    build
+    build false
+fi
+
+if [ "$1" == "--build-clean" ]; then
+    build true
 fi
 
 if [ "$1" == "--run" ]; then

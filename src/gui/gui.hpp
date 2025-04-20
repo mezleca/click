@@ -1,14 +1,15 @@
 #pragma once
 
 #include <glad/glad.h>
-#include <SDL3/SDL.h>
-#include <SDL3/SDL_opengl.h>
+#include <SDL.h>
+#include <SDL_events.h>
+#include <SDL_opengl.h>
 #define IMGUI_IMPL_OPENGL_LOADER_GLAD
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <backends/imgui_impl_opengl3.h>
-#include <backends/imgui_impl_sdl3.h>
+#include <backends/imgui_impl_sdl2.h>
 
 #include "../config/config.hpp"
 #include "../common.hpp"

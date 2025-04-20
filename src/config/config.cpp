@@ -2,13 +2,7 @@
 
 std::string default_config_content =
 R"({
-    "keys": [
-        {
-            "trigger": 9,
-            "target": 1,
-            "cps": 14
-        }
-    ],
+    "keys": [],
     "randomized": false
 }
 )";
@@ -16,10 +10,12 @@ R"({
 namespace Config {
 
     bool file_exists(std::string name) {
+
         if (FILE* file = fopen(name.c_str(), "r")) {
             fclose(file);
             return true;
         }
+
         return false;
     }
 
