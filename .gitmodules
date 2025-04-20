@@ -4,12 +4,6 @@
 [submodule "external/glad"]
 	path = external/glad
 	url = https://github.com/DawidLokiec/glad.git
-[submodule "jsoncpp"]
-	path = jsoncpp
-	url = https://github.com/open-source-parsers/jsoncpp.git
-[submodule "external/json"]
-	path = external/json
-	url = https://github.com/open-source-parsers/jsoncpp.git
 [submodule "external/jsoncpp"]
 	path = external/jsoncpp
 	url = https://github.com/open-source-parsers/jsoncpp.git
