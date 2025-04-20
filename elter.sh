@@ -1,0 +1,73 @@
+#!/bin/bash
+
+if [ "$1" == "--help" ] || [ "$1" == "" ]; then
+    echo "usage: $0 [--configure|--build|--clean]"
+    echo "--configure: configure project"
+    echo "--build: build elterclick"
+    echo "--clean: clean build directory"
+    exit 0
+fi
+
+PROJ_DIR="./"
+BUILD_DIR="./build"
+
+configure() {
+
+    echo "updating cmake"
+
+    if [ ! -d "$BUILD_DIR" ]; then
+        mkdir -p "$BUILD_DIR"
+    fi
+
+    cmake \
+        -DSDL_AUDIO=OFF -DSDL_HAPTIC=OFF -DSDL_HIDAPI=OFF -DSDL_JOYSTICK=OFF -DSDL_POWER=OFF -DSDL_SENSOR=OFF -DSDL_CCACHE=ON \
+        -DSDL_TESTS=OFF -DSDL_INSTALL=OFF -DSDL_SHARED=OFF -DSDL_STATIC=ON -DSDL_INSTALL_DOCS=OFF \
+        -S $PROJ_DIR -B $BUILD_DIR
+    cd ..
+}
+
+build() {
+
+    echo "building"
+
+    if [ ! -d "$BUILD_DIR" ]; then
+        echo "build directory does not exist. please run --configure first."
+        exit 1
+    fi
+
+    cd "$BUILD_DIR" || exit
+    make
+    cd ..
+}
+
+clean() {
+    echo "cleaning build directory"
+    rm -rf "$BUILD_DIR"
+}
+
+run() {
+    if [ ! -d "$BUILD_DIR" ]; then
+        echo "build directory does not exist. please run --configure first."
+        exit 1
+    fi
+
+    cd "$BUILD_DIR" || exit
+    ./elterclick
+}
+
+if [ "$1" == "--configure" ]; then
+    configure
+    build
+fi
+
+if [ "$1" == "--build" ]; then
+    build
+fi
+
+if [ "$1" == "--clean" ]; then
+    clean
+fi
+
+if [ "$1" == "--run" ]; then
+    run
+fi
