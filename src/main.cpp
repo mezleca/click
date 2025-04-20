@@ -1,7 +1,35 @@
 #include <stdio.h>
-#include <SDL3/SDL.h>
+#include <string>
+#include <chrono>
+#include <thread>
+
+#include "input/input.hpp"
+#include "config/config.hpp"
+#include "gui/gui.hpp"
 
 int main() {
-    printf("Hello world\n");
+
+    Config::initialize();
+
+    // make sure we initialize everything properly
+    if (!Gui::initialize()) {
+        std::cerr << "failed to initialize gui system\n";
+        return -1;
+    }
+
+    // create a new thread to input event loop
+    std::thread input_thread(Input::initialize);
+    
+    while (!Gui::done) {
+        Autoclick::update();
+        Gui::update();
+    }
+
+    // close sdl window and shit
+    Gui::finish();
+
+    // wait until the input thread is finished
+    input_thread.join();
+    
     return 0;
 }

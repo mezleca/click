@@ -20,8 +20,8 @@ configure() {
     fi
 
     cmake \
-        -DSDL_AUDIO=OFF -DSDL_HAPTIC=OFF -DSDL_HIDAPI=OFF -DSDL_JOYSTICK=OFF -DSDL_POWER=OFF -DSDL_SENSOR=OFF -DSDL_CCACHE=ON \
-        -DSDL_TESTS=OFF -DSDL_INSTALL=OFF -DSDL_SHARED=OFF -DSDL_STATIC=ON -DSDL_INSTALL_DOCS=OFF \
+        -DSDL_AUDIO=OFF -DSDL_HAPTIC=OFF -DSDL_JOYSTICK=OFF -DSDL_POWER=OFF -DSDL_SENSOR=OFF \
+        -DSDL_TESTS=OFF -DSDL_INSTALL=OFF -DSDL_STATIC=ON -DSDL_INSTALL_DOCS=OFF \
         -S $PROJ_DIR -B $BUILD_DIR
     cd ..
 }
@@ -55,6 +55,10 @@ run() {
     ./elterclick
 }
 
+if [ "$1" == "--clean" ]; then
+    clean
+fi
+
 if [ "$1" == "--configure" ]; then
     configure
     build
@@ -62,10 +66,6 @@ fi
 
 if [ "$1" == "--build" ]; then
     build
-fi
-
-if [ "$1" == "--clean" ]; then
-    clean
 fi
 
 if [ "$1" == "--run" ]; then
