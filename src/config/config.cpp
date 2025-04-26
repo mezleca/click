@@ -60,11 +60,6 @@ namespace Config {
             return;
         }
 
-        // make sure randomized exists
-        if (!root["randomized"].empty()) {
-            config.randomized = root["randomized"].asBool();
-        }
-
         const Json::Value& keys = root["keys"];
 
         // make sure is a valid array
@@ -87,6 +82,7 @@ namespace Config {
             int trigger_keycode = key["trigger"].asInt();
             int target_keycode  = key["target"].asInt();
             int cps_count       = key["cps"].asInt();
+            bool randomized      = key["randomized"].asBool();
 
             if (trigger_keycode < KeyList::NOT_SET || target_keycode > KeyList::MAX_VALUE) {
                 printf("Invalid keycode for key %i\n", i);
@@ -98,7 +94,8 @@ namespace Config {
             config.keys.push_back({
                 trigger: (KeyList)trigger_keycode,
                 target: (KeyList)target_keycode,
-                cps: cps_count
+                cps: cps_count,
+                randomized: randomized
             });
         }
 
@@ -113,8 +110,6 @@ namespace Config {
 
         Json::Value keys(Json::arrayValue);
 
-        root["randomized"] = config.randomized;
-
         for (size_t i = 0; i < config.keys.size(); i++) {
 
             KeyData current_key = config.keys.at(i);
@@ -123,6 +118,7 @@ namespace Config {
             key["trigger"] = current_key.trigger;
             key["target"] = current_key.target;
             key["cps"] = current_key.cps;
+            key["randomized"] = current_key.randomized;
 
             keys.append(key);
         }

@@ -11,8 +11,7 @@
 #include "../common.hpp"
 
 struct ConfigData {
-    std::vector<KeyData> keys;    
-    bool randomized = false;
+    std::vector<KeyData> keys;
 } inline config;
 
 namespace Config {

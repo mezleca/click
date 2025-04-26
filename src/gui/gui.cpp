@@ -216,7 +216,7 @@ namespace Gui {
                 ImGui::Text("cps");
 
                 ImGui::SliderInt("##cps", &current_key->cps, 0, 50);
-                ImGui::Checkbox("randomizer", &config.randomized);
+                ImGui::Checkbox("random", &current_key->randomized);
 
                 ImGui::Text("keybinds");
                 if (ImGui::BeginTable("keytable", 2, table_flags, ImVec2(width / 2, 0.0f))) {

@@ -45,4 +45,5 @@ struct KeyData {
     KeyList trigger = KeyList::MOUSE5;
     KeyList target = KeyList::LEFT;
     int cps = 12;
+    bool randomized = false;
 };
