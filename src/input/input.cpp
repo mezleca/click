@@ -1,8 +1,16 @@
 #include "input.hpp"
+#include <map>
+#ifdef _WIN32
+#include "mingw.thread.h"
+#else
+#include <thread>
+#endif
 
 namespace Input {
 
+#ifdef __linux__
     Display* XDisplay = NULL;
+#endif
     std::vector<KeyList> keys;
 
     std::string to_string(KeyList vKey) {
@@ -39,7 +47,131 @@ namespace Input {
         }
     }
 
+    void remove_key_from_list(int vkey) {
+        auto it = std::find(keys.begin(), keys.end(), vkey);
+        if (it != keys.end()) {
+            int index = std::distance(keys.begin(), it);
+            keys.erase(keys.begin() + index);
+        } else {
+            std::cout << "not removing cuz not found\n";
+        }
+    }
+
+#ifdef _WIN32
+    LRESULT CALLBACK kbHook(int code, WPARAM w, LPARAM l) {
+        
+        if (code == HC_ACTION) {
+            KBDLLHOOKSTRUCT* kb = reinterpret_cast<KBDLLHOOKSTRUCT*>(l);
+            // std::cout << "kb key: " << kb->vkCode << "\n";
+        }
+
+        return CallNextHookEx(nullptr, code, w, l);
+    }
+
+    LRESULT CALLBACK msHook(int code, WPARAM w, LPARAM l) {
+
+        if (code == HC_ACTION) {
+
+            MSLLHOOKSTRUCT* ms = reinterpret_cast<MSLLHOOKSTRUCT*>(l);
+
+            if (w == WM_MOUSEMOVE) {
+                return CallNextHookEx(nullptr, code, w, l);
+            }
+
+            UINT key = HIWORD(ms->mouseData);
+
+            switch (w)
+            {
+                case WM_LBUTTONDOWN:    
+                    keys.push_back(KeyList::LEFT);
+                    break; 
+                case WM_LBUTTONUP:
+                    remove_key_from_list(KeyList::LEFT);
+                    break;
+                case WM_RBUTTONDOWN:
+                    keys.push_back(KeyList::RIGHT);
+                    break; 
+                case WM_RBUTTONUP:
+                    remove_key_from_list(KeyList::RIGHT);
+                    break;
+                case WM_MBUTTONDOWN:
+                    keys.push_back(KeyList::MIDDLE);
+                    break; 
+                case WM_MBUTTONUP:
+                    remove_key_from_list(KeyList::MIDDLE);
+                    break;
+                case WM_XBUTTONDOWN: {
+
+                    if (key == XBUTTON1) {
+                        keys.push_back(KeyList::MOUSE4);
+                    } else {               
+                        keys.push_back(KeyList::MOUSE5);
+                    }
+
+                    break;
+                }
+                case WM_XBUTTONUP: {
+
+                    if (key == XBUTTON1) {
+                        remove_key_from_list(KeyList::MOUSE4);
+                    } else {               
+                        remove_key_from_list(KeyList::MOUSE5);
+                    }
+
+                    break;
+                }
+                default:
+                    break;
+            }
+        }
+
+        return CallNextHookEx(nullptr, code, w, l);
+    }
+    
+    std::map<int, std::pair<int, int>> AIDS = {
+        { 1, { 0x00000002, 0x00000004 } },
+        { 2, { 0x00000008, 0x00000010 }},
+        { 4, { 0x00000020, 0x00000040 }}
+    };
+
+    void normal_click(int vKey) {
+
+        INPUT input[2] = {};
+        std::pair<int, int> keys = AIDS[vKey];
+
+        if (!keys.first) {
+            return;
+        }
+
+        // down
+        input[0].type = INPUT_MOUSE;
+        input[0].mi.dwFlags = keys.first;
+
+        // up
+        input[1].type = INPUT_MOUSE;
+        input[1].mi.dwFlags = keys.second;
+        SendInput(2, input, sizeof(INPUT));
+    }
+
+    void x_click(WORD xButton) {
+        INPUT input[2] = {};
+
+        input[0].type = INPUT_MOUSE;
+        input[0].mi.dwFlags = MOUSEEVENTF_XDOWN;
+        input[0].mi.mouseData = xButton;
+
+        input[1].type = INPUT_MOUSE;
+        input[1].mi.dwFlags = MOUSEEVENTF_XUP;
+        input[1].mi.mouseData = xButton;
+
+        SendInput(2, input, sizeof(INPUT));
+    }
+
+#endif
+
     void initialize() {
+
+        #ifdef __linux__
         
         // could pass NULL but yeah
         std::string name = std::getenv("DISPLAY");
@@ -105,13 +237,7 @@ namespace Input {
                         keys.push_back(key_value);
                     }
                     else if (raw_event->evtype == XI_RawButtonRelease) {
-
-                        auto it = std::find(keys.begin(), keys.end(), key_value);
-
-                        if (it != keys.end()) {
-                            int index = std::distance(keys.begin(), it);
-                            keys.erase(keys.begin() + index);
-                        }
+                        remove_key_from_list(key_value);
                     }
                 }
                 
@@ -120,6 +246,20 @@ namespace Input {
         }
 
         XCloseDisplay(XDisplay);
+        #else 
+
+        HHOOK hKeyHook = SetWindowsHookEx(WH_KEYBOARD_LL, kbHook, nullptr, 0);
+        HHOOK hMouseHook = SetWindowsHookEx(WH_MOUSE_LL, msHook, NULL, 0);
+
+        MSG msg;
+        while (GetMessage(&msg, nullptr, 0, 0)) {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
+
+        UnhookWindowsHookEx(hKeyHook);
+        UnhookWindowsHookEx(hMouseHook);
+        #endif
     }
 
     // @TODO: windows
@@ -137,8 +277,11 @@ namespace Input {
         XTestFakeButtonEvent(XDisplay, (int)vKey, false, CurrentTime);
         XFlush(XDisplay);
         #else
-        // @TODO: making input for different keys on windows in a pain in the ass
-        // why tf do i need different flags for different keys???
+        if (vKey > KeyList::MIDDLE) {
+
+        } else {
+            normal_click(vKey);
+        }
         #endif
     }
 
@@ -189,7 +332,7 @@ namespace Autoclick {
             auto target_delay = 1000 / key.cps;
 
             // @TODO: variation percentage
-            if (config.randomized) {
+            if (key.randomized) {
                 int variation = target_delay * 0.30;
                 target_delay += rand() % variation;
             }

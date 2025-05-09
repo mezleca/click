@@ -1,8 +1,10 @@
 #pragma once
 
+#ifdef __linux__
 #include <X11/Xlib.h>
 #include <X11/extensions/XInput2.h>
 #include <X11/extensions/XTest.h>
+#endif
 
 #include "../config/config.hpp"
 #include "../gui/gui.hpp"
@@ -20,5 +22,7 @@ namespace Input {
     std::string to_string(KeyList vKey);
 
     extern std::vector<KeyList> keys;
+#ifdef __linux__
     extern Display* XDisplay;
+#endif
 }

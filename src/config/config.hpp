@@ -12,9 +12,11 @@
 
 struct ConfigData {
     std::vector<KeyData> keys;
-} inline config;
+};
 
 namespace Config {
     void initialize();
     bool save();
 }
+
+extern ConfigData config;

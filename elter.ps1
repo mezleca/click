@@ -17,26 +17,21 @@ function ShowHelp {
 }
 
 function Configure {
-
-    Write-Host "updating cmake"
-
     if (-not (Test-Path $BUILD_DIR)) {
         New-Item -ItemType Directory -Path $BUILD_DIR | Out-Null
     }
     
     cmake `
-        -DSDL_AUDIO=OFF -DSDL_HAPTIC=OFF -DSDL_JOYSTICK=OFF -DSDL_POWER=OFF -DSDL_SENSOR=OFF `
-        -DSDL_TESTS=OFF -DSDL_INSTALL=OFF -DSDL_STATIC=ON -DSDL_INSTALL_DOCS=OFF -DBUILD_STATIC_LIBS=ON `
-        -DBUILD_SHARED_LIBS=OFF `
-        -S $PROJ_DIR -B $BUILD_DIR
+        -G "MinGW Makefiles" `
+        -DCMAKE_C_COMPILER="C:\MinGW\bin\gcc.exe" `
+        -DCMAKE_CXX_COMPILER="C:\MinGW\bin\g++.exe" `
+        -DBUILD_SHARED_LIBS=OFF -S $PROJ_DIR -B $BUILD_DIR 
 }
 
 function Build {
     param (
         [bool]$clean = $false
     )
-    
-    Write-Host "building"
 
     if (-not (Test-Path $BUILD_DIR)) {
         Write-Host "build directory does not exist. please run --configure first."
@@ -46,24 +41,21 @@ function Build {
     Push-Location $BUILD_DIR
     
     if ($clean) {
-        Write-Host "cleaning..."
         cmake --build . --target clean
     }
     
-    cmake --build . --config Release --parallel 4
+    cmake --build . --config Release --parallel 4 -j 4
     
     Pop-Location
 }
 
 function Clean {
-    Write-Host "cleaning build directory"
     if (Test-Path $BUILD_DIR) {
         Remove-Item -Recurse -Force $BUILD_DIR
     }
 }
 
 function Run {
-
     if (-not (Test-Path $BUILD_DIR)) {
         Write-Host "build directory does not exist. please run --configure first."
         exit 1
@@ -76,7 +68,7 @@ function Run {
     } elseif (Test-Path ".\elterclick.exe") {
         & ".\elterclick.exe"
     } else {
-        Write-Host "Executable not found. Make sure the build was successful."
+        Write-Host "executable not found"
     }
     
     Pop-Location

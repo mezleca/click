@@ -7,6 +7,8 @@ R"({
 }
 )";
 
+ConfigData config;
+
 namespace Config {
 
     bool file_exists(std::string name) {
@@ -20,6 +22,7 @@ namespace Config {
     }
 
     void create_file(std::string name, std::string content = "") {
+        std::cout << "creating default config file" << "\n";
         std::ofstream file(name);
         file << content;
         file.close();

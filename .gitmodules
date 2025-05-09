@@ -1,9 +1,9 @@
-[submodule "external/sdl"]
-	path = external/sdl
-	url = https://github.com/libsdl-org/SDL.git
 [submodule "external/glad"]
 	path = external/glad
 	url = https://github.com/DawidLokiec/glad.git
 [submodule "external/jsoncpp"]
 	path = external/jsoncpp
 	url = https://github.com/open-source-parsers/jsoncpp.git
+[submodule "external/mingw-std-threads"]
+	path = external/mingw-std-threads
+	url = https://github.com/meganz/mingw-std-threads
