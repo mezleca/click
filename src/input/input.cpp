@@ -208,7 +208,7 @@ namespace Input {
         XSync(XDisplay, 0);
         free(mask.mask);
 
-        while(!Gui::done) {
+        while (!glfwWindowShouldClose(Gui::window)) {
             
             if (XPending(XDisplay) == 0) {
                 std::this_thread::sleep_for(std::chrono::milliseconds(50));

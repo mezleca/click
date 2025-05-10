@@ -7,5 +7,5 @@ clicker
     - [ ] mouse shit
         - [x] mouse hook
         - [ ] mouse click simulation
-    - [ ] make sure linux build still works
+    - [x] make sure linux build still works
 - [ ] keyboard trigger/target

@@ -13,7 +13,8 @@ BUILD_DIR="./build"
 
 configure() {
 
-    echo "updating cmake"
+    cd "$PROJ_DIR" || exit
+    git submodule update --init --recursive
 
     if [ ! -d "$BUILD_DIR" ]; then
         mkdir -p "$BUILD_DIR"
@@ -27,10 +28,8 @@ configure() {
 
 build() {
 
-    echo "building"
-
     if [ ! -d "$BUILD_DIR" ]; then
-        echo "build directory does not exist. please run --configure first."
+        configure
         exit 1
     fi
 
@@ -38,7 +37,6 @@ build() {
 
     if [ "$1" == true ];
     then 
-        echo "cleaning..."
         make clean
     fi
 
@@ -47,13 +45,12 @@ build() {
 }
 
 clean() {
-    echo "cleaning build directory"
     rm -rf "$BUILD_DIR"
 }
 
 run() {
     if [ ! -d "$BUILD_DIR" ]; then
-        echo "build directory does not exist. please run --configure first."
+        echo "forgot to build?"
         exit 1
     fi
 
