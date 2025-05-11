@@ -5,17 +5,37 @@ if [ "$1" == "--help" ] || [ "$1" == "" ]; then
     echo "--configure: configure project"
     echo "--build: build elterclick"
     echo "--clean: clean build directory"
+    echo "--clean-build: make clean then build"
+    echo "--run: run the binary"
     exit 0
 fi
 
 PROJ_DIR="./"
 BUILD_DIR="./build"
 
+download_cpm() {
+
+    # create cpm folder
+    if [[ ! -d "./CPM" ]]; then
+        mkdir -p "./CPM"
+    fi
+
+    # download the cpm file
+    curl -L "https://github.com/cpm-cmake/CPM.cmake/releases/latest/download/get_cpm.cmake" \
+        -o "./CPM/CPM.cmake"
+}
+
 configure() {
 
+    if [[ ! -f "./CPM/CPM.cmake" ]]; then
+        download_cpm
+    fi
+
+    # make sure we are on the project path then get the repos
     cd "$PROJ_DIR" || exit
     git submodule update --init --recursive
 
+    # create buil dir
     if [ ! -d "$BUILD_DIR" ]; then
         mkdir -p "$BUILD_DIR"
     fi
@@ -30,17 +50,10 @@ build() {
 
     if [ ! -d "$BUILD_DIR" ]; then
         configure
-        exit 1
     fi
 
     cd "$BUILD_DIR" || exit
-
-    if [ "$1" == true ];
-    then 
-        make clean
-    fi
-
-    make -j4
+    make --parallel 4 -j 4
     cd ..
 }
 
@@ -67,11 +80,12 @@ if [ "$1" == "--configure" ]; then
 fi
 
 if [ "$1" == "--build" ]; then
-    build false
+    build
 fi
 
-if [ "$1" == "--build-clean" ]; then
-    build true
+if [ "$1" == "--clean-build" ]; then
+    make clean
+    build
 fi
 
 if [ "$1" == "--run" ]; then

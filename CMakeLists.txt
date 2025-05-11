@@ -1,68 +1,64 @@
 cmake_minimum_required(VERSION 3.13)
+project(elterclick)
 
+# until i find out how to use ming64 on win
 add_definitions(-D_WIN32_WINNT=0x0501)
 
-# vars
-set(include_dirs)
-set(link_libs)
-
-option(MINGW_STDTHREADS_GENERATE_STDHEADERS "" ON)
-
-# cpp files
-file(GLOB_RECURSE SOURCES
-    CONFIGURE_DEPENDS
-    ${CMAKE_SOURCE_DIR}/src/*.cpp
-)
-
-# hpp files
-file(GLOB_RECURSE HEADERS
-    CONFIGURE_DEPENDS
-    ${CMAKE_SOURCE_DIR}/src/*.hpp
-)
-
-set(JSONCPP_SOURCES
-    ${CMAKE_SOURCE_DIR}/external/jsoncpp/src/lib_json/json_reader.cpp
-    ${CMAKE_SOURCE_DIR}/external/jsoncpp/src/lib_json/json_value.cpp
-    ${CMAKE_SOURCE_DIR}/external/jsoncpp/src/lib_json/json_writer.cpp
-)
-
-# add CPM
-include(${CMAKE_SOURCE_DIR}/cmake/CPM.cmake)
-
-# set project name
-project(elterclick)
-add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS} ${JSONCPP_SOURCES})
-
-# add subdirectories
-add_subdirectory(external/glad)
-add_subdirectory(external/imgui)
-
-# add glfw via CPM
-CPMAddPackage("gh:glfw/glfw#7b6aead")
-
-# add include directories
-list(APPEND include_dirs external/imgui external/glad/include external/jsoncpp/include external/mingw-std-threads)
-
-# include linux garbage
-if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux")
-    find_package(X11 REQUIRED COMPONENTS Xi XTest)
-    list(APPEND include_dirs ${X11_INCLUDE_DIR})
-    list(APPEND link_libs
-        ${X11_LIBRARIES}
-        ${X11_Xi_LIB}
-        ${X11_XTest_LIB}
-    )
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release)
 endif()
 
-# include directories
-target_include_directories(${PROJECT_NAME} PUBLIC
-    ${include_dirs}
+set(CMAKE_CXX_FLAGS_RELEASE "-Os -ffunction-sections -fdata-sections")
+set(CMAKE_EXE_LINKER_FLAGS_RELEASE "-Wl,--gc-sections -s")
+set(CMAKE_CXX_FLAGS_DEBUG   "-g")
+
+find_package(OpenGL REQUIRED)
+
+# srcs...
+file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS src/*.cpp)
+file(GLOB_RECURSE HEADERS CONFIGURE_DEPENDS src/*.h)
+
+set(JSONCPP_SOURCES
+    external/jsoncpp/src/lib_json/json_reader.cpp
+    external/jsoncpp/src/lib_json/json_value.cpp
+    external/jsoncpp/src/lib_json/json_writer.cpp
 )
 
-# link libraries
-target_link_libraries(${PROJECT_NAME} PRIVATE 
+file(GLOB IMGUI_CORE_SOURCES "external/imgui/*.cpp")
+
+# only glfw / opengl is needed
+set(IMGUI_BACKEND_SOURCES 
+    "external/imgui/backends/imgui_impl_glfw.cpp"
+    "external/imgui/backends/imgui_impl_opengl3.cpp"
+)
+
+set(IMGUI_SOURCES 
+    ${IMGUI_CORE_SOURCES}
+    ${IMGUI_BACKEND_SOURCES}
+)
+
+include(CPM/CPM.cmake)
+CPMAddPackage("gh:glfw/glfw#7b6aead")
+
+add_subdirectory(external/glad)
+
+add_executable(${PROJECT_NAME}
+    ${SOURCES}
+    ${HEADERS}
+    ${JSONCPP_SOURCES}
+    ${IMGUI_SOURCES}
+)
+
+target_include_directories(${PROJECT_NAME} PUBLIC
+    external/imgui
+    external/imgui/backends
+    external/glad/include
+    external/jsoncpp/include
+    external/mingw-std-threads
+)
+
+target_link_libraries(${PROJECT_NAME} PRIVATE
     glfw
-    glad 
-    imgui
-    ${link_libs}
+    glad
+    OpenGL::GL
 )
