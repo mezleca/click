@@ -159,8 +159,6 @@ namespace Input {
 
         INPUT input[2] = {};
 
-        std::cout << AIDS2[xButton] << "\n";
-
         input[0].type = INPUT_MOUSE;
         input[0].mi.dwFlags = MOUSEEVENTF_XDOWN;
         input[0].mi.mouseData = xButton;
