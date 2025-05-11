@@ -12,6 +12,10 @@ namespace Input {
     Display* XDisplay = NULL;
 #endif
     std::vector<KeyList> keys;
+#ifdef _WIN32
+    HHOOK hKeyHook;
+    HHOOK hMouseHook;
+#endif
 
     std::string to_string(KeyList vKey) {
         
@@ -52,8 +56,6 @@ namespace Input {
         if (it != keys.end()) {
             int index = std::distance(keys.begin(), it);
             keys.erase(keys.begin() + index);
-        } else {
-            std::cout << "not removing cuz not found\n";
         }
     }
 
@@ -75,7 +77,7 @@ namespace Input {
             MSLLHOOKSTRUCT* ms = reinterpret_cast<MSLLHOOKSTRUCT*>(l);
 
             if (w == WM_MOUSEMOVE) {
-                return CallNextHookEx(nullptr, code, w, l);
+                return CallNextHookEx(hKeyHook, code, w, l);
             }
 
             UINT key = HIWORD(ms->mouseData);
@@ -101,37 +103,37 @@ namespace Input {
                     remove_key_from_list(KeyList::MIDDLE);
                     break;
                 case WM_XBUTTONDOWN: {
-
                     if (key == XBUTTON1) {
                         keys.push_back(KeyList::MOUSE4);
                     } else {               
                         keys.push_back(KeyList::MOUSE5);
                     }
-
                     break;
                 }
                 case WM_XBUTTONUP: {
-
                     if (key == XBUTTON1) {
                         remove_key_from_list(KeyList::MOUSE4);
                     } else {               
                         remove_key_from_list(KeyList::MOUSE5);
                     }
-
                     break;
                 }
-                default:
-                    break;
             }
         }
 
-        return CallNextHookEx(nullptr, code, w, l);
+        return CallNextHookEx(hKeyHook, code, w, l);
     }
     
+    // fucking stupid but who cares
     std::map<int, std::pair<int, int>> AIDS = {
         { 1, { 0x00000002, 0x00000004 } },
         { 2, { 0x00000008, 0x00000010 }},
         { 4, { 0x00000020, 0x00000040 }}
+    };
+
+    std::map<int, int> AIDS2 = {
+        { KeyList::MOUSE4, 1 },
+        { KeyList::MOUSE5, 2 },
     };
 
     void normal_click(int vKey) {
@@ -153,8 +155,11 @@ namespace Input {
         SendInput(2, input, sizeof(INPUT));
     }
 
-    void x_click(WORD xButton) {
+    void other_click(WORD xButton) {
+
         INPUT input[2] = {};
+
+        std::cout << AIDS2[xButton] << "\n";
 
         input[0].type = INPUT_MOUSE;
         input[0].mi.dwFlags = MOUSEEVENTF_XDOWN;
@@ -162,11 +167,10 @@ namespace Input {
 
         input[1].type = INPUT_MOUSE;
         input[1].mi.dwFlags = MOUSEEVENTF_XUP;
-        input[1].mi.mouseData = xButton;
+        input[1].mi.mouseData = (DWORD)AIDS2[xButton];
 
         SendInput(2, input, sizeof(INPUT));
     }
-
 #endif
 
     void initialize() {
@@ -248,8 +252,10 @@ namespace Input {
         XCloseDisplay(XDisplay);
         #else 
 
-        HHOOK hKeyHook = SetWindowsHookEx(WH_KEYBOARD_LL, kbHook, nullptr, 0);
-        HHOOK hMouseHook = SetWindowsHookEx(WH_MOUSE_LL, msHook, NULL, 0);
+        HINSTANCE hInst = GetModuleHandleW(nullptr);
+
+        hKeyHook = SetWindowsHookExW(WH_KEYBOARD_LL, kbHook, hInst, 0);
+        hMouseHook = SetWindowsHookExW(WH_MOUSE_LL, msHook, hInst, 0);
 
         MSG msg;
         while (GetMessage(&msg, nullptr, 0, 0)) {
@@ -277,10 +283,11 @@ namespace Input {
         XTestFakeButtonEvent(XDisplay, (int)vKey, false, CurrentTime);
         XFlush(XDisplay);
         #else
-        if (vKey > KeyList::MIDDLE) {
-
-        } else {
+        // @TODO: this sucks
+        if (vKey <= KeyList::MIDDLE) {
             normal_click(vKey);
+        } else {
+            other_click(vKey);
         }
         #endif
     }
