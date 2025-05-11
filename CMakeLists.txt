@@ -49,6 +49,16 @@ add_executable(${PROJECT_NAME}
     ${IMGUI_SOURCES}
 )
 
+if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux")
+    find_package(X11 REQUIRED COMPONENTS Xi XTest)
+    target_include_directories(elterclick PUBLIC ${X11_INCLUDE_DIR})
+    target_link_libraries(elterclick PRIVATE
+        ${X11_LIBRARIES}
+        ${X11_Xi_LIB}
+        ${X11_XTest_LIB}
+    )
+endif()
+
 target_include_directories(${PROJECT_NAME} PUBLIC
     external/imgui
     external/imgui/backends

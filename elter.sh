@@ -53,7 +53,7 @@ build() {
     fi
 
     cd "$BUILD_DIR" || exit
-    make --parallel 4 -j 4
+    make -j 4
     cd ..
 }
 
