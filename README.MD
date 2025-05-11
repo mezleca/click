@@ -11,6 +11,6 @@ clicker
 - [ ] keyboard trigger/target
     - [ ] windows kb hook
     - [ ] linux kb event (prob just need
-update the mask)
-    - [ ] add kb keys to keylist and create methods for send kb input (win/linux)
+to update the mask)
+    - [ ] add kb keys to keylist and create methods to send kb input (win/linux)
    
