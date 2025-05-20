@@ -1,13 +1,22 @@
 cmake_minimum_required(VERSION 3.13)
 project(elterclick)
 
-# until i find out how to use ming64 on win
-add_definitions(-D_WIN32_WINNT=0x0501)
-
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif()
 
+# you may need to change this
+if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
+    set(CMAKE_C_COMPILER "C:\\MinGW\\bin\\gcc.exe")
+    set(CMAKE_CXX_COMPILER "C:\\MinGW\\bin\\g++.exe")
+endif()
+
+# force c++ 17
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS    OFF)
+
+# set extra flags
 set(CMAKE_CXX_FLAGS_RELEASE "-Os -ffunction-sections -fdata-sections")
 set(CMAKE_EXE_LINKER_FLAGS_RELEASE "-Wl,--gc-sections -s")
 set(CMAKE_CXX_FLAGS_DEBUG   "-g")
@@ -64,7 +73,6 @@ target_include_directories(${PROJECT_NAME} PUBLIC
     external/imgui/backends
     external/glad/include
     external/jsoncpp/include
-    external/mingw-std-threads
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE

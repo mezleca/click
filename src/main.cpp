@@ -1,12 +1,8 @@
 #include <stdio.h>
 #include <string>
 #include <chrono>
-#ifdef _WIN32
-#define _WIN32_WINNT 0x0501
-#include "mingw.thread.h"
-#else
 #include <thread>
-#endif
+
 #include "input/input.hpp"
 #include "config/config.hpp"
 #include "gui/gui.hpp"

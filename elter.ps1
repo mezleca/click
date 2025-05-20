@@ -35,8 +35,7 @@ function Configure {
 
     cmake `
         -G "MinGW Makefiles" `
-        -DCMAKE_C_COMPILER="C:\MinGW\bin\gcc.exe" `
-        -DCMAKE_CXX_COMPILER="C:\MinGW\bin\g++.exe" `
+        -DCMAKE_CXX_STANDARD=17 -DCMAKE_CXX_STANDARD_REQUIRED=ON -DCMAKE_CXX_EXTENSIONS=OFF `
         -DBUILD_SHARED_LIBS=OFF -S $PROJ_DIR -B $BUILD_DIR 
 }
 

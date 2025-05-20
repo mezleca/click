@@ -1,10 +1,6 @@
 #include "input.hpp"
 #include <map>
-#ifdef _WIN32
-#include "mingw.thread.h"
-#else
 #include <thread>
-#endif
 
 std::string Input::to_string(KeyList vKey) {
     
@@ -50,24 +46,24 @@ void Input::remove_key_from_list(int vkey) {
 
 #ifdef _WIN32
 
-LRESULT CALLBACK kbHook(int code, WPARAM w, LPARAM l) {
+LRESULT CALLBACK Input::kbHook(int code, WPARAM w, LPARAM l) {
     
     if (code == HC_ACTION) {
         KBDLLHOOKSTRUCT* kb = reinterpret_cast<KBDLLHOOKSTRUCT*>(l);
         // std::cout << "kb key: " << kb->vkCode << "\n";
     }
 
-    return CallNextHookEx(nullptr, code, w, l);
+    return CallNextHookEx(hKeyHook, code, w, l);
 }
 
-LRESULT CALLBACK msHook(int code, WPARAM w, LPARAM l) {
+LRESULT CALLBACK Input::msHook(int code, WPARAM w, LPARAM l) {
 
     if (code == HC_ACTION) {
 
         MSLLHOOKSTRUCT* ms = reinterpret_cast<MSLLHOOKSTRUCT*>(l);
 
         if (w == WM_MOUSEMOVE) {
-            return CallNextHookEx(hKeyHook, code, w, l);
+            return CallNextHookEx(hMouseHook, code, w, l);
         }
 
         UINT key = HIWORD(ms->mouseData);
@@ -111,10 +107,10 @@ LRESULT CALLBACK msHook(int code, WPARAM w, LPARAM l) {
         }
     }
 
-    return CallNextHookEx(hKeyHook, code, w, l);
+    return CallNextHookEx(hMouseHook, code, w, l);
 }
 
-void normal_click(int vKey) {
+void Input::normal_click(int vKey) {
 
     INPUT input[2] = {};
     std::pair<int, int> keys = AIDS[vKey];
@@ -133,7 +129,7 @@ void normal_click(int vKey) {
     SendInput(2, input, sizeof(INPUT));
 }
 
-void other_click(WORD xButton) {
+void Input::other_click(WORD xButton) {
 
     INPUT input[2] = {};
 

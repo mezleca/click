@@ -35,7 +35,11 @@ namespace Input {
     inline std::vector<KeyList> keys;
 #ifdef __linux__
     inline Display* XDisplay;
-#else 
+#else
+    void normal_click(int vKey);
+    void other_click(WORD xButton);
+    LRESULT kbHook(int code, WPARAM w, LPARAM l);
+    LRESULT msHook(int code, WPARAM w, LPARAM l);
     inline HHOOK hKeyHook;
     inline HHOOK hMouseHook;
 #endif
