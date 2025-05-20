@@ -10,19 +10,33 @@
 #include "../gui/gui.hpp"
 #include "../common.hpp"
 
+// fucking stupid but who cares
+inline std::map<int, std::pair<int, int>> AIDS = {
+    { 1, { 0x00000002, 0x00000004 } },
+    { 2, { 0x00000008, 0x00000010 }},
+    { 4, { 0x00000020, 0x00000040 }}
+};
+
+inline std::map<int, int> AIDS2 = {
+    { KeyList::MOUSE4, 1 },
+    { KeyList::MOUSE5, 2 },
+};
+
 namespace Autoclick {
     void update();
 }
 
 namespace Input {
+    std::string to_string(KeyList vKey);
+    bool is_pressing_key(KeyList vKey);
     void initialize();
     void click(KeyList vKey);
-    bool is_pressing_key(KeyList vKey);
-
-    std::string to_string(KeyList vKey);
-
-    extern std::vector<KeyList> keys;
+    void remove_key_from_list(int vkey);
+    inline std::vector<KeyList> keys;
 #ifdef __linux__
-    extern Display* XDisplay;
+    inline Display* XDisplay;
+#else 
+    inline HHOOK hKeyHook;
+    inline HHOOK hMouseHook;
 #endif
 }

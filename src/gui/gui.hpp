@@ -17,10 +17,11 @@ namespace ImGuiCustom {
 
 namespace Gui {
     bool initialize();
+    bool is_focused();
     void update();
     void finish();
-    bool is_focused();
+    void create_button();
 
-    extern GLFWwindow* window;
-    extern int current_item;
+    inline GLFWwindow* window;
+    inline int width = 800, height = 600, current_item = 0;
 }

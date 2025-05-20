@@ -16,7 +16,9 @@ struct ConfigData {
 
 namespace Config {
     void initialize();
+    void create_file(std::string name, std::string content);
     bool save();
+    bool file_exists(std::string name);
 }
 
-extern ConfigData config;
+inline ConfigData config;
