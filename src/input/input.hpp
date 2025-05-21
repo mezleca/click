@@ -4,6 +4,7 @@
 #include <X11/Xlib.h>
 #include <X11/extensions/XInput2.h>
 #include <X11/extensions/XTest.h>
+#include <X11/keysym.h>
 #endif
 
 #include "../config/config.hpp"
@@ -27,12 +28,12 @@ namespace Autoclick {
 }
 
 namespace Input {
-    std::string to_string(KeyList vKey);
-    bool is_pressing_key(KeyList vKey);
+    std::string to_string(int vKey);
+    bool is_pressing_key(int vKey);
     void initialize();
-    void click(KeyList vKey);
+    void click(int vKey);
     void remove_key_from_list(int vkey);
-    inline std::vector<KeyList> keys;
+    inline std::vector<int> keys;
 #ifdef __linux__
     inline Display* XDisplay;
 #else

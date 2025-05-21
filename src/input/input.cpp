@@ -1,10 +1,33 @@
 #include "input.hpp"
 #include <map>
 #include <thread>
+#include <X11/XKBlib.h>
 
-std::string Input::to_string(KeyList vKey) {
+std::string get_keyboard_key(int vKey) {
+#ifdef __linux__
+    KeySym kc = XkbKeycodeToKeysym(Input::XDisplay, vKey, 0, 0);
+    std::string result = XKeysymToString(kc);
+    if (result != "") {
+        return result;
+    }
+#else
+    // TODO: test
+    UINT sc = MapVirtualKeyA(vk, MAPVK_VK_TO_VSC);
+    LONG lparam = sc << 16;
+
+    char buf[64] = {0};
+    int len = GetKeyNameTextA(lparam, buf, sizeof(buf));
+
+    if (len > 0) {
+        return std::string(buf, len);
+    }
+#endif
+    return "unknown";
+}
+
+std::string Input::to_string(int vKey) {
     
-    if (vKey > KeyList::MAX_VALUE) {
+    if (vKey == 0 || vKey > KeyList::MAX_KB_VALUE) {
         return "invalid";
     }
 
@@ -32,7 +55,7 @@ std::string Input::to_string(KeyList vKey) {
         case KeyList::MOUSE5:
             return "mouse5";
         default:
-            return "invalid";
+            return get_keyboard_key(vKey);
     }
 }
 
@@ -176,6 +199,8 @@ void Input::initialize() {
     // apply mask and select events
     XISetMask(mask.mask, XI_RawButtonPress);
     XISetMask(mask.mask, XI_RawButtonRelease);
+    XISetMask(mask.mask, XI_RawKeyPress);
+    XISetMask(mask.mask, XI_RawKeyRelease);
     XISelectEvents(XDisplay, root_window, &mask, 1);
 
     XSync(XDisplay, 0);
@@ -197,19 +222,18 @@ void Input::initialize() {
 
             if (XGetEventData(XDisplay, &event.xcookie)) {
 
+                // since im lazy asf, we cant get the get from KeyList on kb
                 XIRawEvent* raw_event = (XIRawEvent*)event.xcookie.data;
-                KeyList key_value = (KeyList)raw_event->detail;
+                auto key_value = raw_event->detail;
 
-                // erm what the sigma
-                if (key_value > KeyList::MAX_VALUE) {
-                    printf("yep: %i\n", raw_event->detail);
+                if (key_value > KeyList::F12 || key_value < KeyList::LEFT) {
                     continue;
                 }
-                
-                if (raw_event->evtype == XI_RawButtonPress) {
+
+                if (raw_event->evtype == XI_RawButtonPress || raw_event->evtype == XI_RawKeyPress) {
                     keys.push_back(key_value);
                 }
-                else if (raw_event->evtype == XI_RawButtonRelease) {
+                else if (raw_event->evtype == XI_RawButtonRelease || raw_event->evtype == XI_RawKeyRelease) {
                     remove_key_from_list(key_value);
                 }
             }
@@ -238,7 +262,7 @@ void Input::initialize() {
 }
 
 // @TODO: windows
-void Input::click(KeyList vKey) {
+void Input::click(int vKey) {
 
     #ifdef __linux__
 
@@ -246,11 +270,18 @@ void Input::click(KeyList vKey) {
         printf("failed to get display\n");
         return;
     }
-
-    XTestFakeButtonEvent(XDisplay, (int)vKey, true, CurrentTime);
-    XFlush(XDisplay);
-    XTestFakeButtonEvent(XDisplay, (int)vKey, false, CurrentTime);
-    XFlush(XDisplay);
+    
+    if (vKey <= KeyList::MAX_MOUSE_VALUE) {
+        XTestFakeButtonEvent(XDisplay, vKey, true, CurrentTime);
+        XFlush(XDisplay);
+        XTestFakeButtonEvent(XDisplay, vKey, false, CurrentTime);
+        XFlush(XDisplay);
+    } else {
+        XTestFakeKeyEvent(XDisplay, vKey, true, CurrentTime);
+        XFlush(XDisplay);
+        XTestFakeKeyEvent(XDisplay, vKey, false, CurrentTime);
+        XFlush(XDisplay);
+    }
     #else
     if (vKey <= KeyList::MIDDLE) {
         normal_click(vKey);
@@ -260,7 +291,7 @@ void Input::click(KeyList vKey) {
     #endif
 }
 
-bool Input::is_pressing_key(KeyList vKey) {
+bool Input::is_pressing_key(int vKey) {
 #ifdef __linux__
     auto it = std::find(keys.begin(), keys.end(), vKey);
     return it != keys.end();

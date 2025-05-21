@@ -12,7 +12,7 @@
 #include "../common.hpp"
 
 namespace ImGuiCustom {
-    KeyList hotkey(const char* label, KeyList* key, float samelineOffset = 0.0f);
+    int hotkey(const char* label, int* key, float samelineOffset = 0.0f);
 }
 
 namespace Gui {

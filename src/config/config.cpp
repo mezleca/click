@@ -83,7 +83,7 @@ void Config::initialize() {
         int cps_count       = key["cps"].asInt();
         bool randomized      = key["randomized"].asBool();
 
-        if (trigger_keycode < KeyList::NOT_SET || target_keycode > KeyList::MAX_VALUE) {
+        if (trigger_keycode < KeyList::NOT_SET || target_keycode > KeyList::MAX_KB_VALUE) {
             printf("Invalid keycode for key %i\n", i);
             continue;
         }
@@ -91,8 +91,8 @@ void Config::initialize() {
         printf("[%i] trigger: %i | target: %i | cps: %i\n", i, trigger_keycode, target_keycode, cps_count);
 
         config.keys.push_back({
-            trigger: (KeyList)trigger_keycode,
-            target: (KeyList)target_keycode,
+            trigger: trigger_keycode,
+            target: target_keycode,
             cps: cps_count,
             randomized: randomized
         });

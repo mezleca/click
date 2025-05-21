@@ -1,9 +1,9 @@
 #include "gui.hpp"
 
 // @TODO: some way to confirm or wait idk before setting the key idk
-KeyList ImGuiCustom::hotkey(const char* label, KeyList* key, float samelineOffset) {
+int ImGuiCustom::hotkey(const char* label, int* key, float samelineOffset) {
 
-    KeyList selected_key = KeyList::INVALID;
+    int selected_key = KeyList::INVALID;
     ImGui::PushID(label);
 
     ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetColorU32(ImGuiCol_ButtonActive));
@@ -157,7 +157,7 @@ void Gui::update() {
                     ImGui::TableNextRow();
                     ImGui::TableSetColumnIndex(0);
 
-                    KeyList new_trigger_key = ImGuiCustom::hotkey("trigger", &current_key->trigger);
+                    int new_trigger_key = ImGuiCustom::hotkey("trigger", &current_key->trigger);
 
                     // make sure the trigger is not equal to the target
                     if (new_trigger_key > KeyList::NOT_SET && current_key->target != new_trigger_key) {
@@ -166,7 +166,7 @@ void Gui::update() {
 
                     ImGui::TableSetColumnIndex(1);
                     
-                    KeyList new_target_key = ImGuiCustom::hotkey("target", &current_key->target);
+                    int new_target_key = ImGuiCustom::hotkey("target", &current_key->target);
 
                     // make sure the target is not equal to the trigger
                     if (new_target_key > KeyList::NOT_SET && current_key->trigger != new_target_key) {
