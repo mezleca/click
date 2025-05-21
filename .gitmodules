@@ -4,9 +4,6 @@
 [submodule "external/jsoncpp"]
 	path = external/jsoncpp
 	url = https://github.com/open-source-parsers/jsoncpp.git
-[submodule "external/mingw-std-threads"]
-	path = external/mingw-std-threads
-	url = https://github.com/meganz/mingw-std-threads
 [submodule "external/imgui"]
 	path = external/imgui
 	url = https://github.com/ocornut/imgui
