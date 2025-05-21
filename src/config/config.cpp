@@ -38,9 +38,6 @@ void Config::initialize() {
 
     // check if the config file exists, if not create a placeholder one
     if (!config_file.is_open()) {
-
-        printf("creating new config\n");
-
         std::ofstream new_config("./config.json");
         new_config << default_config_content;
         config.keys.push_back(default_key);

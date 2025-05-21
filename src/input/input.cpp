@@ -28,7 +28,7 @@ std::string get_keyboard_key(int vKey) {
 std::string Input::to_string(int vKey) {
     
     if (vKey == 0 || vKey > KeyList::MAX_KB_VALUE) {
-        return "invalid";
+        return "not set";
     }
 
     switch (vKey)
@@ -336,12 +336,23 @@ void Autoclick::update() {
 
         // @TODO: variation percentage
         if (key.randomized) {
-            int variation = target_delay * 0.30;
-            target_delay += rand() % variation;
+
+            int variation = target_delay * 0.50;
+            int random_adj = (rand() % (2 * variation + 1)) - variation;
+
+            target_delay += random_adj;
+
+            if (target_delay < 5) {
+                target_delay = 5;
+            }
         }
 
         auto elapsed = std::chrono::duration_cast<duration>(clock::now() - start).count();
         int delay = static_cast<int>(target_delay - elapsed);
+
+        if (delay < 0) {
+            delay = 5;
+        }
 
         std::this_thread::sleep_for(std::chrono::milliseconds(
             static_cast<int>(delay)
