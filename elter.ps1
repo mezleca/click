@@ -39,9 +39,7 @@ function Configure {
 function Build {
     if (-not (Test-Path $BUILD_DIR)) {
         Configure
-        exit 1
     }
-    
     Push-Location $BUILD_DIR
     cmake --build . --config Release -j 4
     Pop-Location
@@ -55,19 +53,18 @@ function Clean {
 
 function Run {
     if (-not (Test-Path $BUILD_DIR)) {
-        Write-Host "build directory does not exist. please run --configure first."
+        Write-Host "build directory does not exist. please run --configure or --build first."
         exit 1
     }
     Push-Location $BUILD_DIR
-    if (Test-Path ".\Release\elterclick.exe") { & ".\Release\elterclick.exe"} 
-    elseif (Test-Path ".\elterclick.exe") { & ".\elterclick.exe" } 
+    if (Test-Path ".\elterclick.exe") { & ".\elterclick.exe" } 
     else { Write-Host "executable not found" }
     Pop-Location
 }
 
 switch ($action) {
     "--help" { ShowHelp }
-    "" { ShowHelp }
+    "" { Run }
     "--configure" { Configure }
     "--build" { Build }
     "--clean-build" {
@@ -75,6 +72,5 @@ switch ($action) {
         Build
     }
     "--clean" { Clean }
-    "--run" { Run }
     default { Write-Host "Invalid parameter: $action" ShowHelp }
 }

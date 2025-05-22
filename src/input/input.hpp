@@ -5,6 +5,7 @@
 #include <X11/extensions/XInput2.h>
 #include <X11/extensions/XTest.h>
 #include <X11/keysym.h>
+#include <X11/XKBlib.h>
 #endif
 
 #include "../config/config.hpp"
@@ -16,11 +17,6 @@ inline std::map<int, std::pair<int, int>> AIDS = {
     { 1, { 0x00000002, 0x00000004 } },
     { 2, { 0x00000008, 0x00000010 }},
     { 4, { 0x00000020, 0x00000040 }}
-};
-
-inline std::map<int, int> AIDS2 = {
-    { KeyList::MOUSE4, 1 },
-    { KeyList::MOUSE5, 2 },
 };
 
 namespace Autoclick {
@@ -37,8 +33,8 @@ namespace Input {
 #ifdef __linux__
     inline Display* XDisplay;
 #else
-    void normal_click(int vKey);
-    void other_click(WORD xButton);
+    void normal_press(int vKey, bool kb);
+    void other_press(WORD xButton);
     LRESULT kbHook(int code, WPARAM w, LPARAM l);
     LRESULT msHook(int code, WPARAM w, LPARAM l);
     inline HHOOK hKeyHook;

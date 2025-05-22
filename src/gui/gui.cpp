@@ -90,6 +90,7 @@ void Gui::update() {
 
     if (!is_focused()) {
         glfwSwapBuffers(window);
+        ImGui_ImplGlfw_Sleep(10);
         return;
     }
 
@@ -148,7 +149,7 @@ void Gui::update() {
 
                 ImGui::Text("cps");
 
-                ImGui::SliderInt("##cps", &current_key->cps, 0, 50);
+                ImGui::SliderInt("##cps", &current_key->cps, 0, 100);
                 ImGui::Checkbox("random", &current_key->randomized);
 
                 ImGui::Text("keybinds");
@@ -203,6 +204,7 @@ void Gui::update() {
 
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
     glfwSwapBuffers(window);
+    ImGui_ImplGlfw_Sleep(10);
 }
 
 bool Gui::is_focused() {

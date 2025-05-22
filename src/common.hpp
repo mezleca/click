@@ -14,6 +14,8 @@
 #include <utility>
 #include <vector>
 #include <unordered_map>
+#include <map>
+#include <thread>
 
 enum KeyList {
     INVALID = -1,
@@ -30,21 +32,15 @@ enum KeyList {
     MOUSE4,
     MOUSE5,
 /*              KEYBOARD STUFF          */
-    K_SPACE    = XK_space,      // 0x0020
-    K_EXCLAM   = XK_exclam,     // 0x0021
-    K_QUOTEDBL = XK_quotedbl,   // 0x0022
     K_0        = XK_0,          // 0x0030
-    K_1        = XK_1,
     K_9        = XK_9,          // 0x0039
     K_A        = XK_A,          // 0x0041
     K_B        = XK_B,
     K_Z        = XK_Z,          // 0x005A
-    K_a        = XK_a,          // 0x0061
-    K_z        = XK_z,          // 0x007A
-    F1         = XK_F1,         // 0xFFBE
     F2         = XK_F2,
     F12        = XK_F12,        // 0xFFC9
 #else
+/*              MOUSE STUFF             */
     LEFT         = VK_LBUTTON,    // 0x01
     MIDDLE       = VK_MBUTTON,    // 0x04
     RIGHT        = VK_RBUTTON,    // 0x02
@@ -53,7 +49,12 @@ enum KeyList {
     PSCROLL_LEFT = 0x0A,
     PSCROLL_DOWN = 0x0B,
     MOUSE4       = VK_XBUTTON1,   // 0x05
-    MOUSE5       = VK_XBUTTON2,    // 0x06
+    MOUSE5       = VK_XBUTTON2,   // 0x06
+/*              KEYBOARD STUFF          */
+    K_A = 0x41,
+    K_Z = 0x5A,
+    F1  = VK_F1,
+    F12 = VK_F12,
 #endif
     MAX_KB_VALUE = F12,
     MAX_MOUSE_VALUE = MOUSE5
@@ -64,4 +65,5 @@ struct KeyData {
     int target = KeyList::LEFT;
     int cps = 12;
     bool randomized = false;
+    std::chrono::high_resolution_clock::time_point last_click_time{};
 };

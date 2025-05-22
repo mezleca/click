@@ -1,18 +1,15 @@
 #include "input.hpp"
-#include <map>
-#include <thread>
-#include <X11/XKBlib.h>
 
 std::string get_keyboard_key(int vKey) {
 #ifdef __linux__
     KeySym kc = XkbKeycodeToKeysym(Input::XDisplay, vKey, 0, 0);
     std::string result = XKeysymToString(kc);
+
     if (result != "") {
         return result;
     }
 #else
-    // TODO: test
-    UINT sc = MapVirtualKeyA(vk, MAPVK_VK_TO_VSC);
+    UINT sc = MapVirtualKeyA(vKey, MAPVK_VK_TO_VSC);
     LONG lparam = sc << 16;
 
     char buf[64] = {0};
@@ -72,8 +69,16 @@ void Input::remove_key_from_list(int vkey) {
 LRESULT CALLBACK Input::kbHook(int code, WPARAM w, LPARAM l) {
     
     if (code == HC_ACTION) {
+
         KBDLLHOOKSTRUCT* kb = reinterpret_cast<KBDLLHOOKSTRUCT*>(l);
-        // std::cout << "kb key: " << kb->vkCode << "\n";
+
+        if (kb->flags == 0) {
+            keys.push_back(kb->vkCode);
+        } else {
+            remove_key_from_list(kb->vkCode);
+        }
+
+        // std::cout << "kb key: " << kb->vkCode << " flags: " << kb->flags << " scode: " << kb->scanCode <<"\n";
     }
 
     return CallNextHookEx(hKeyHook, code, w, l);
@@ -133,37 +138,48 @@ LRESULT CALLBACK Input::msHook(int code, WPARAM w, LPARAM l) {
     return CallNextHookEx(hMouseHook, code, w, l);
 }
 
-void Input::normal_click(int vKey) {
+void Input::normal_press(int vKey, bool kb) {
 
     INPUT input[2] = {};
     std::pair<int, int> keys = AIDS[vKey];
 
-    if (!keys.first) {
+    if (!keys.first && !kb) {
         return;
     }
 
-    // down
-    input[0].type = INPUT_MOUSE;
-    input[0].mi.dwFlags = keys.first;
+    if (kb) {
+        input[0].type = INPUT_KEYBOARD;
+        input[0].mi.dwFlags = 0;
+        input[0].ki.wVk = vKey;
 
-    // up
-    input[1].type = INPUT_MOUSE;
-    input[1].mi.dwFlags = keys.second;
+        input[1].type = INPUT_KEYBOARD;
+        input[1].mi.dwFlags = KEYEVENTF_KEYUP;
+        input[1].ki.wVk = vKey;
+    } else {
+        input[0].type = INPUT_MOUSE;
+        input[0].mi.dwFlags = keys.first;
+
+        input[1].type = INPUT_MOUSE;
+        input[1].mi.dwFlags = keys.second;
+    }
+
+    // send up/down keypress
     SendInput(2, input, sizeof(INPUT));
 }
 
-void Input::other_click(WORD xButton) {
+void Input::other_press(WORD xButton) {
 
     INPUT input[2] = {};
 
     input[0].type = INPUT_MOUSE;
     input[0].mi.dwFlags = MOUSEEVENTF_XDOWN;
-    input[0].mi.mouseData = xButton;
+    input[0].mi.mouseData = KeyList::MOUSE4 ? 1 : 2;
 
     input[1].type = INPUT_MOUSE;
     input[1].mi.dwFlags = MOUSEEVENTF_XUP;
-    input[1].mi.mouseData = (DWORD)AIDS2[xButton];
+    input[1].mi.mouseData = KeyList::MOUSE4 ? 1 : 2;
 
+    // send up/down keypress
     SendInput(2, input, sizeof(INPUT));
 }
 #endif
@@ -209,7 +225,7 @@ void Input::initialize() {
     while (!glfwWindowShouldClose(Gui::window)) {
         
         if (XPending(XDisplay) == 0) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+            std::this_thread::sleep_for(std::chrono::milliseconds(20));
             continue;
         }
 
@@ -283,36 +299,34 @@ void Input::click(int vKey) {
         XFlush(XDisplay);
     }
     #else
-    if (vKey <= KeyList::MIDDLE) {
-        normal_click(vKey);
+    if (vKey <= KeyList::MAX_MOUSE_VALUE) {
+        if (vKey <= KeyList::MIDDLE) {
+            normal_press(vKey, false);
+        } else {
+            other_press(vKey);
+        }
     } else {
-        other_click(vKey);
+        normal_press(vKey, true);
     }
     #endif
 }
 
 bool Input::is_pressing_key(int vKey) {
-#ifdef __linux__
     auto it = std::find(keys.begin(), keys.end(), vKey);
     return it != keys.end();
-#else
-    return (GetKeyState((int)vKey) & 0x8000) != 0;
-#endif
 }
 
 void Autoclick::update() {
 
     using clock = std::chrono::steady_clock;
-    using duration = std::chrono::milliseconds;    
-    
-    auto start = clock::now();
 
     // only simulate input if the window is not focused
+    // if the user is not pressing anything
+
     if (Gui::is_focused()) {
         return;
     }
 
-    // if the user is not pressing anything, sleep for 10ms
     if (config.keys.size() == 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
         return;
@@ -320,6 +334,8 @@ void Autoclick::update() {
 
     // loop through all keys and simulate input it needed
     for (const KeyData& key : config.keys) {
+       
+        auto start = std::chrono::steady_clock::now();
         
         if (!Input::is_pressing_key(key.trigger)) {
             continue;
@@ -329,8 +345,6 @@ void Autoclick::update() {
         if (key.target == KeyList::NOT_SET) {
             continue;
         }
-
-        Input::click(key.target);
 
         auto target_delay = 1000 / key.cps;
 
@@ -342,20 +356,19 @@ void Autoclick::update() {
 
             target_delay += random_adj;
 
-            if (target_delay < 5) {
-                target_delay = 5;
+            if (target_delay < 1) {
+                target_delay = 1;
             }
         }
 
-        auto elapsed = std::chrono::duration_cast<duration>(clock::now() - start).count();
+        Input::click(key.target);
+
+        int64_t elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(clock::now() - start).count();
         int delay = static_cast<int>(target_delay - elapsed);
-
-        if (delay < 0) {
-            delay = 5;
+        
+        if (delay > 0) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(delay));
         }
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(
-            static_cast<int>(delay)
-        ));
     }
+
 }
