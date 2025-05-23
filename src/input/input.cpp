@@ -138,32 +138,39 @@ LRESULT CALLBACK Input::msHook(int code, WPARAM w, LPARAM l) {
     return CallNextHookEx(hMouseHook, code, w, l);
 }
 
-void Input::normal_press(int vKey, bool kb) {
+constexpr std::array<std::pair<DWORD, DWORD>, 3> MOUSE_FLAGS = {{
+    { MOUSEEVENTF_LEFTDOWN, MOUSEEVENTF_LEFTUP },
+    { MOUSEEVENTF_RIGHTDOWN, MOUSEEVENTF_RIGHTUP },
+    { MOUSEEVENTF_MIDDLEDOWN, MOUSEEVENTF_MIDDLEUP }
+}};
+
+void Input::normal_press(int vKey, bool isKb) {
 
     INPUT input[2] = {};
-    std::pair<int, int> keys = AIDS[vKey];
 
-    if (!keys.first && !kb) {
-        return;
-    }
+    if (isKb) {
 
-    if (kb) {
         input[0].type = INPUT_KEYBOARD;
-        input[0].mi.dwFlags = 0;
-        input[0].ki.wVk = vKey;
+        input[0].ki.wVk = static_cast<WORD>(vKey);
+        input[0].ki.dwFlags = 0;
 
-        input[1].type = INPUT_KEYBOARD;
-        input[1].mi.dwFlags = KEYEVENTF_KEYUP;
-        input[1].ki.wVk = vKey;
+        input[1].type = INPUT_KEYBOARD; 
+        input[1].ki.wVk = static_cast<WORD>(vKey);
+        input[1].ki.dwFlags = KEYEVENTF_KEYUP;
+
     } else {
+        // invalid
+        if (vKey < 1 || vKey > 3) {
+            return;
+        }
+
         input[0].type = INPUT_MOUSE;
-        input[0].mi.dwFlags = keys.first;
+        input[0].mi.dwFlags = MOUSE_FLAGS[vKey-1].first;
 
         input[1].type = INPUT_MOUSE;
-        input[1].mi.dwFlags = keys.second;
+        input[1].mi.dwFlags = MOUSE_FLAGS[vKey-1].second;
     }
 
-    // send up/down keypress
     SendInput(2, input, sizeof(INPUT));
 }
 
@@ -260,7 +267,6 @@ void Input::initialize() {
 
     XCloseDisplay(XDisplay);
 #else 
-
     HINSTANCE hInst = GetModuleHandleW(nullptr);
 
     hKeyHook = SetWindowsHookExW(WH_KEYBOARD_LL, kbHook, hInst, 0);
