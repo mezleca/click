@@ -349,8 +349,6 @@ void Autoclick::update() {
             continue;
         }
 
-        std::cout << "pressing" << Input::to_string(key.trigger) << "\n";
-
         // make sure target is set
         if (key.target == KeyList::NOT_SET) {
             continue;
