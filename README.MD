@@ -10,7 +10,7 @@ Supports both **Windows** and **Linux (X11)**.
 
 ## Requirements
 - CMake 3.13+
-- Linux: gcc, X11, Xrandr, pthread
+- Linux: gcc, xtest, x11
 - Windows: MinGW / mingw32-make
 
 ## TODO
