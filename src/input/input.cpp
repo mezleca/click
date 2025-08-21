@@ -23,7 +23,6 @@ std::string get_keyboard_key(int vKey) {
 }
 
 std::string Input::to_string(int vKey) {
-    
     if (vKey == 0 || vKey > KeyList::MAX_KB_VALUE) {
         return "not set";
     }
@@ -67,7 +66,6 @@ void Input::remove_key_from_list(int vkey) {
 #ifdef _WIN32
 
 LRESULT CALLBACK Input::kbHook(int code, WPARAM w, LPARAM l) {
-    
     if (code == HC_ACTION) {
 
         KBDLLHOOKSTRUCT* kb = reinterpret_cast<KBDLLHOOKSTRUCT*>(l);
@@ -85,7 +83,6 @@ LRESULT CALLBACK Input::kbHook(int code, WPARAM w, LPARAM l) {
 }
 
 LRESULT CALLBACK Input::msHook(int code, WPARAM w, LPARAM l) {
-
     if (code == HC_ACTION) {
 
         MSLLHOOKSTRUCT* ms = reinterpret_cast<MSLLHOOKSTRUCT*>(l);
@@ -145,7 +142,6 @@ constexpr std::array<std::pair<DWORD, DWORD>, 3> MOUSE_FLAGS = {{
 }};
 
 void Input::normal_press(int vKey, bool isKb) {
-
     INPUT input[2] = {};
 
     if (isKb) {
@@ -175,7 +171,6 @@ void Input::normal_press(int vKey, bool isKb) {
 }
 
 void Input::other_press(WORD xButton) {
-
     INPUT input[2] = {};
 
     input[0].type = INPUT_MOUSE;
@@ -230,7 +225,6 @@ void Input::initialize() {
     free(mask.mask);
 
     while (!glfwWindowShouldClose(Gui::window)) {
-        
         if (XPending(XDisplay) == 0) {
             std::this_thread::sleep_for(std::chrono::milliseconds(20));
             continue;
@@ -245,19 +239,32 @@ void Input::initialize() {
 
             if (XGetEventData(XDisplay, &event.xcookie)) {
 
-                // since im lazy asf, we cant get the get from KeyList on kb
                 XIRawEvent* raw_event = (XIRawEvent*)event.xcookie.data;
-                auto key_value = raw_event->detail;
+                auto detail = raw_event->detail;
 
-                if (key_value > KeyList::F12 || key_value < KeyList::LEFT) {
-                    continue;
+                if (raw_event->evtype == XI_RawButtonPress || raw_event->evtype == XI_RawButtonRelease) {
+                    int button = static_cast<int>(detail);
+                    // accept only known mouse button range
+                    if (button < KeyList::LEFT || button > KeyList::MAX_MOUSE_VALUE) {
+                        // unknown/ignored button
+                    } else {
+                        if (raw_event->evtype == XI_RawButtonPress) {
+                            keys.push_back(button);
+                        } else {
+                            remove_key_from_list(button);
+                        }
+                    }
                 }
-
-                if (raw_event->evtype == XI_RawButtonPress || raw_event->evtype == XI_RawKeyPress) {
-                    keys.push_back(key_value);
-                }
-                else if (raw_event->evtype == XI_RawButtonRelease || raw_event->evtype == XI_RawKeyRelease) {
-                    remove_key_from_list(key_value);
+                else if (raw_event->evtype == XI_RawKeyPress || raw_event->evtype == XI_RawKeyRelease) {
+                    KeySym kc = XkbKeycodeToKeysym(XDisplay, static_cast<KeyCode>(detail), 0, 0);
+                    if (kc != NoSymbol) {
+                        int sym = static_cast<int>(kc);
+                        if (raw_event->evtype == XI_RawKeyPress) {
+                            keys.push_back(sym);
+                        } else {
+                            remove_key_from_list(sym);
+                        }
+                    }
                 }
             }
             
@@ -285,9 +292,7 @@ void Input::initialize() {
 
 // @TODO: windows
 void Input::click(int vKey) {
-
     #ifdef __linux__
-
     if (XDisplay == NULL) {
         printf("failed to get display\n");
         return;
@@ -323,12 +328,9 @@ bool Input::is_pressing_key(int vKey) {
 }
 
 void Autoclick::update() {
-
     using clock = std::chrono::steady_clock;
 
     // only simulate input if the window is not focused
-    // if the user is not pressing anything
-
     if (Gui::is_focused()) {
         return;
     }
@@ -346,6 +348,8 @@ void Autoclick::update() {
         if (!Input::is_pressing_key(key.trigger)) {
             continue;
         }
+
+        std::cout << "pressing" << Input::to_string(key.trigger) << "\n";
 
         // make sure target is set
         if (key.target == KeyList::NOT_SET) {
@@ -376,5 +380,4 @@ void Autoclick::update() {
             std::this_thread::sleep_for(std::chrono::milliseconds(delay));
         }
     }
-
 }
