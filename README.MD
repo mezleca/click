@@ -13,6 +13,9 @@ Supports both **Windows** and **Linux (X11)**.
 - Linux: gcc, X11, Xrandr, pthread
 - Windows: MinGW / mingw32-make
 
+## TODO
+- [ ] Fix input manager using invalid keys for keyboard (linux)
+
 ## Build & Run  
 
 ### Linux 
