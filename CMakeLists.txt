@@ -5,6 +5,11 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif()
 
+# temp
+if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
+    set(DCMAKE_SH="CMAKE_SH-NOTFOUND")
+endif()
+
 # force c++ 17
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
