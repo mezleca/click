@@ -236,33 +236,28 @@ void Input::initialize() {
 
         // @TODO: fix being almost impossible to bind scrollup/down on linux due to gui not updating on time
         if (event.type == GenericEvent && event.xcookie.extension == xi_op_code) {
-
             if (XGetEventData(XDisplay, &event.xcookie)) {
-
                 XIRawEvent* raw_event = (XIRawEvent*)event.xcookie.data;
                 auto detail = raw_event->detail;
-
+                // std::cout << "ev_type: " << raw_event->evtype /* << " | button: " << static_cast<int>(detail) */ << "\n";
                 if (raw_event->evtype == XI_RawButtonPress || raw_event->evtype == XI_RawButtonRelease) {
-                    int button = static_cast<int>(detail);
                     // accept only known mouse button range
-                    if (button < KeyList::LEFT || button > KeyList::MAX_MOUSE_VALUE) {
+                    if (detail < KeyList::LEFT || detail > KeyList::MAX_MOUSE_VALUE) {
                         // unknown/ignored button
                     } else {
                         if (raw_event->evtype == XI_RawButtonPress) {
-                            keys.push_back(button);
+                            keys.push_back(detail);
                         } else {
-                            remove_key_from_list(button);
+                            remove_key_from_list(detail);
                         }
                     }
                 }
                 else if (raw_event->evtype == XI_RawKeyPress || raw_event->evtype == XI_RawKeyRelease) {
-                    KeySym kc = XkbKeycodeToKeysym(XDisplay, static_cast<KeyCode>(detail), 0, 0);
-                    if (kc != NoSymbol) {
-                        int sym = static_cast<int>(kc);
+                    if (detail != NoSymbol) {
                         if (raw_event->evtype == XI_RawKeyPress) {
-                            keys.push_back(sym);
+                            keys.push_back(detail);
                         } else {
-                            remove_key_from_list(sym);
+                            remove_key_from_list(detail);
                         }
                     }
                 }
@@ -342,7 +337,6 @@ void Autoclick::update() {
 
     // loop through all keys and simulate input it needed
     for (const KeyData& key : config.keys) {
-       
         auto start = std::chrono::steady_clock::now();
         
         if (!Input::is_pressing_key(key.trigger)) {
@@ -358,7 +352,6 @@ void Autoclick::update() {
 
         // @TODO: variation percentage
         if (key.randomized) {
-
             int variation = target_delay * 0.50;
             int random_adj = (rand() % (2 * variation + 1)) - variation;
 

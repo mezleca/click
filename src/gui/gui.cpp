@@ -2,7 +2,6 @@
 
 // @TODO: some way to confirm or wait idk before setting the key idk
 int ImGuiCustom::hotkey(const char* label, int* key, float samelineOffset) {
-
     int selected_key = KeyList::INVALID;
     ImGui::PushID(label);
 
@@ -22,8 +21,7 @@ int ImGuiCustom::hotkey(const char* label, int* key, float samelineOffset) {
     return selected_key;
 }
 
-bool Gui::initialize() {
-                    
+bool Gui::initialize() {        
     const char* window_error;
 
     if (!glfwInit()) {
@@ -80,7 +78,6 @@ void Gui::create_button() {
 }
 
 void Gui::update() {
-
     glfwPollEvents();
 
     if (glfwGetWindowAttrib(window, GLFW_ICONIFIED) != 0) {
@@ -109,8 +106,7 @@ void Gui::update() {
 
     ImGui::Begin("elterclick", NULL, flags);
 
-    if (ImGui::BeginTabBar("Tabs", flags))
-    {
+    if (ImGui::BeginTabBar("Tabs", flags)) {
         if (ImGui::BeginTabItem("general")) {
 
             const auto keys_size = config.keys.size();
@@ -154,7 +150,6 @@ void Gui::update() {
 
                 ImGui::Text("keybinds");
                 if (ImGui::BeginTable("keytable", 2, table_flags, ImVec2(width / 2, 0.0f))) {
-                
                     ImGui::TableNextRow();
                     ImGui::TableSetColumnIndex(0);
 
@@ -182,7 +177,6 @@ void Gui::update() {
         }
 
         if (ImGui::BeginTabItem("config")) {
-
             if (ImGui::Button("save")) {
                 Config::save();
             }
@@ -208,12 +202,7 @@ void Gui::update() {
 }
 
 bool Gui::is_focused() {
-
-    if (!window) {
-        return false;
-    }
-    
-    return glfwGetWindowAttrib(window, GLFW_FOCUSED);
+   return window ? glfwGetWindowAttrib(window, GLFW_FOCUSED) : false;
 }
 
 void Gui::finish() {

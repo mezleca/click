@@ -10,37 +10,21 @@ Supports both **Windows** and **Linux (X11)**.
 
 ## Requirements
 - CMake 3.13+
-- Linux: gcc, xtest, x11
+- Linux: gcc, x11 stuff
 - Windows: MinGW / mingw32-make
-
-## TODO
-- [ ] Fix input manager using invalid keys for keyboard (linux)
 
 ## Build & Run  
 
-### Linux 
 ```bash
-# ensure proper perms
+# ensure proper perms on linux
 chmod +x ./elter.sh
 
 # configure project
-./elter.sh --configure
+./elter --configure
 
 # build 
-./elter.sh --build
+./elter --build
 
 # run       
-./elter.sh --run
-```
-
-### Windows
-```bash
-# configure project
-.\elter.ps1 --configure 
-
-# build 
-.\elter.ps1 --build
-
-# run
-.\elter.ps1 --run
+./elter --run
 ```
