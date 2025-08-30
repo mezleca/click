@@ -60,10 +60,29 @@ enum KeyList {
     MAX_MOUSE_VALUE = MOUSE5
 };
 
+enum PressedKeyType {
+    MOUSE = 0,
+    KEYBOARD
+};
+
+struct PressedKeyData {
+    int key;
+    PressedKeyType type;
+
+    bool operator==(int vKey) const {
+        return key == vKey;
+    }
+
+    bool operator==(const PressedKeyData& other) const {
+        return key == other.key && type == other.type;
+    }
+};
+
 struct KeyData {
     int trigger = KeyList::MOUSE5;
     int target = KeyList::LEFT;
     int cps = 12;
     bool randomized = false;
-    std::chrono::high_resolution_clock::time_point last_click_time{};
+    PressedKeyType trigger_type;
+    PressedKeyType target_type;
 };

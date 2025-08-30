@@ -11,8 +11,15 @@
 #include "../config/config.hpp"
 #include "../common.hpp"
 
+struct KeybindState {
+
+};
+
 namespace ImGuiCustom {
-    int hotkey(const char* label, int* key, float samelineOffset = 0.0f);
+    PressedKeyData* hotkey(const char* label, int* key, float samelineOffset = 0.0f);
+    KeybindState get_keybind_state(std::string id);
+    void clear_keybind_state();
+    inline std::unordered_map<std::string, KeybindState> keybind_state; 
 }
 
 namespace Gui {

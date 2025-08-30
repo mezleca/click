@@ -25,11 +25,11 @@ namespace Autoclick {
 
 namespace Input {
     std::string to_string(int vKey);
-    bool is_pressing_key(int vKey);
+    PressedKeyData *pressed_key(int vKey, PressedKeyType keyType);
     void initialize();
     void click(int vKey);
-    void remove_key_from_list(int vkey);
-    inline std::vector<int> keys;
+    void remove_key(PressedKeyData key_data);
+    inline std::vector<PressedKeyData> keys;
 #ifdef __linux__
     inline Display* XDisplay;
 #else

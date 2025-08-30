@@ -8,7 +8,6 @@ R"({
 )";
 
 bool Config::file_exists(std::string name) {
-
     if (FILE* file = fopen(name.c_str(), "r")) {
         fclose(file);
         return true;
@@ -25,7 +24,7 @@ void Config::create_file(std::string name, std::string content = "") {
 }
 
 void Config::initialize() {
-    
+
     std::string file_name = "config.json";
     KeyData default_key;
 
@@ -75,23 +74,27 @@ void Config::initialize() {
             continue;
         }
 
-        int trigger_keycode = key["trigger"].asInt();
-        int target_keycode  = key["target"].asInt();
-        int cps_count       = key["cps"].asInt();
-        bool randomized      = key["randomized"].asBool();
+        bool randomized              = key["randomized"].asBool();
+        int trigger_keycode          = key["trigger"].asInt();
+        int target_keycode           = key["target"].asInt();
+        int cps_count                = key["cps"].asInt();
+        PressedKeyType target_type   = (PressedKeyType)key["target_type"].asInt();
+        PressedKeyType trigger_type  = (PressedKeyType)key["trigger_type"].asInt();
 
         if (trigger_keycode < KeyList::NOT_SET || target_keycode > KeyList::MAX_KB_VALUE) {
             printf("Invalid keycode for key %i\n", i);
             continue;
         }
         
-        printf("[%i] trigger: %i | target: %i | cps: %i\n", i, trigger_keycode, target_keycode, cps_count);
+        printf("[%i] trigger: %i | target: %i | cps: %i | trigger type: %i | target type: %i\n", i, trigger_keycode, target_keycode, cps_count, trigger_type, target_type);
 
         config.keys.push_back({
             trigger: trigger_keycode,
             target: target_keycode,
             cps: cps_count,
-            randomized: randomized
+            randomized: randomized,
+            trigger_type: trigger_type,
+            target_type: target_type
         });
     }
 
@@ -99,7 +102,6 @@ void Config::initialize() {
 }
 
 bool Config::save() {
-
     Json::Value root;
     Json::StreamWriterBuilder wbuilder;
     wbuilder["indentation"] = "\t";
@@ -107,7 +109,6 @@ bool Config::save() {
     Json::Value keys(Json::arrayValue);
 
     for (size_t i = 0; i < config.keys.size(); i++) {
-
         KeyData current_key = config.keys.at(i);
         Json::Value key(Json::objectValue);
 
@@ -115,6 +116,8 @@ bool Config::save() {
         key["target"] = current_key.target;
         key["cps"] = current_key.cps;
         key["randomized"] = current_key.randomized;
+        key["trigger_type"] = current_key.trigger_type;
+        key["target_type"] = current_key.target_type;
 
         keys.append(key);
     }

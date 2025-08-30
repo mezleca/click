@@ -55,8 +55,8 @@ std::string Input::to_string(int vKey) {
     }
 }
 
-void Input::remove_key_from_list(int vkey) {
-    auto it = std::find(keys.begin(), keys.end(), vkey);
+void Input::remove_key(PressedKeyData key_data) {
+    auto it = std::find(keys.begin(), keys.end(), key_data);
     if (it != keys.end()) {
         int index = std::distance(keys.begin(), it);
         keys.erase(keys.begin() + index);
@@ -73,7 +73,7 @@ LRESULT CALLBACK Input::kbHook(int code, WPARAM w, LPARAM l) {
         if (kb->flags == 0) {
             keys.push_back(kb->vkCode);
         } else {
-            remove_key_from_list(kb->vkCode);
+            remove_key(kb->vkCode);
         }
 
         // std::cout << "kb key: " << kb->vkCode << " flags: " << kb->flags << " scode: " << kb->scanCode <<"\n";
@@ -99,19 +99,19 @@ LRESULT CALLBACK Input::msHook(int code, WPARAM w, LPARAM l) {
                 keys.push_back(KeyList::LEFT);
                 break; 
             case WM_LBUTTONUP:
-                remove_key_from_list(KeyList::LEFT);
+                remove_key(KeyList::LEFT);
                 break;
             case WM_RBUTTONDOWN:
                 keys.push_back(KeyList::RIGHT);
                 break; 
             case WM_RBUTTONUP:
-                remove_key_from_list(KeyList::RIGHT);
+                remove_key(KeyList::RIGHT);
                 break;
             case WM_MBUTTONDOWN:
                 keys.push_back(KeyList::MIDDLE);
                 break; 
             case WM_MBUTTONUP:
-                remove_key_from_list(KeyList::MIDDLE);
+                remove_key(KeyList::MIDDLE);
                 break;
             case WM_XBUTTONDOWN: {
                 if (key == XBUTTON1) {
@@ -123,9 +123,9 @@ LRESULT CALLBACK Input::msHook(int code, WPARAM w, LPARAM l) {
             }
             case WM_XBUTTONUP: {
                 if (key == XBUTTON1) {
-                    remove_key_from_list(KeyList::MOUSE4);
+                    remove_key(KeyList::MOUSE4);
                 } else {               
-                    remove_key_from_list(KeyList::MOUSE5);
+                    remove_key(KeyList::MOUSE5);
                 }
                 break;
             }
@@ -237,27 +237,37 @@ void Input::initialize() {
         // @TODO: fix being almost impossible to bind scrollup/down on linux due to gui not updating on time
         if (event.type == GenericEvent && event.xcookie.extension == xi_op_code) {
             if (XGetEventData(XDisplay, &event.xcookie)) {
+                // create new keydata
+                PressedKeyData key_data;
+                
                 XIRawEvent* raw_event = (XIRawEvent*)event.xcookie.data;
-                auto detail = raw_event->detail;
-                // std::cout << "ev_type: " << raw_event->evtype /* << " | button: " << static_cast<int>(detail) */ << "\n";
+                int key_code = raw_event->detail;
+
+                // debug
+                // std::cout << "ev_type: " << raw_event->evtype  << " | button: " << key_code << "\n";
+
                 if (raw_event->evtype == XI_RawButtonPress || raw_event->evtype == XI_RawButtonRelease) {
                     // accept only known mouse button range
-                    if (detail < KeyList::LEFT || detail > KeyList::MAX_MOUSE_VALUE) {
+                    if (key_code < KeyList::LEFT || key_code > KeyList::MAX_MOUSE_VALUE) {
                         // unknown/ignored button
                     } else {
+                        key_data.key = key_code;
+                        key_data.type = PressedKeyType::MOUSE;
                         if (raw_event->evtype == XI_RawButtonPress) {
-                            keys.push_back(detail);
+                            keys.push_back(key_data);
                         } else {
-                            remove_key_from_list(detail);
+                            remove_key(key_data);
                         }
                     }
                 }
                 else if (raw_event->evtype == XI_RawKeyPress || raw_event->evtype == XI_RawKeyRelease) {
-                    if (detail != NoSymbol) {
+                    if (key_code != NoSymbol) {
+                        key_data.key = key_code;
+                        key_data.type = PressedKeyType::KEYBOARD;
                         if (raw_event->evtype == XI_RawKeyPress) {
-                            keys.push_back(detail);
+                            keys.push_back(key_data);
                         } else {
-                            remove_key_from_list(detail);
+                            remove_key(key_data);
                         }
                     }
                 }
@@ -317,9 +327,13 @@ void Input::click(int vKey) {
     #endif
 }
 
-bool Input::is_pressing_key(int vKey) {
-    auto it = std::find(keys.begin(), keys.end(), vKey);
-    return it != keys.end();
+PressedKeyData* Input::pressed_key(int vKey, PressedKeyType keyType) {
+    for (auto it = keys.begin(); it != keys.end(); ++it) {
+        if (it->key == vKey && it->type == keyType) {
+            return &(*it);
+        }
+    }
+    return nullptr;
 }
 
 void Autoclick::update() {
@@ -338,13 +352,20 @@ void Autoclick::update() {
     // loop through all keys and simulate input it needed
     for (const KeyData& key : config.keys) {
         auto start = std::chrono::steady_clock::now();
+        auto pressed_key = Input::pressed_key(key.trigger, key.trigger_type); 
         
-        if (!Input::is_pressing_key(key.trigger)) {
+        // check if the key is valid
+        if (pressed_key == nullptr) {
             continue;
         }
 
         // make sure target is set
         if (key.target == KeyList::NOT_SET) {
+            continue;
+        }
+
+        // check if the key type matches
+        if (key.trigger_type != pressed_key->type) {
             continue;
         }
 

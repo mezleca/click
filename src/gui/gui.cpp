@@ -1,8 +1,8 @@
 #include "gui.hpp"
 
 // @TODO: some way to confirm or wait idk before setting the key idk
-int ImGuiCustom::hotkey(const char* label, int* key, float samelineOffset) {
-    int selected_key = KeyList::INVALID;
+PressedKeyData* ImGuiCustom::hotkey(const char* label, int* key, float samelineOffset) {
+    PressedKeyData* key_data = nullptr;
     ImGui::PushID(label);
 
     ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetColorU32(ImGuiCol_ButtonActive));
@@ -13,12 +13,11 @@ int ImGuiCustom::hotkey(const char* label, int* key, float samelineOffset) {
 
     // if the user is hovering and pressing a key, update the KeyList values
     if (hover && Input::keys.size() != 0) {
-        selected_key = Input::keys.back();
+        key_data = &Input::keys.back();
     }
 
     ImGui::PopID();
-    
-    return selected_key;
+    return key_data;
 }
 
 bool Gui::initialize() {        
@@ -153,20 +152,26 @@ void Gui::update() {
                     ImGui::TableNextRow();
                     ImGui::TableSetColumnIndex(0);
 
-                    int new_trigger_key = ImGuiCustom::hotkey("trigger", &current_key->trigger);
+                    PressedKeyData* new_trigger = ImGuiCustom::hotkey("trigger", &current_key->trigger);
 
-                    // make sure the trigger is not equal to the target
-                    if (new_trigger_key > KeyList::NOT_SET && current_key->target != new_trigger_key) {
-                        current_key->trigger = new_trigger_key;
+                    if (new_trigger != nullptr) {
+                        // make sure the trigger is not equal to the target
+                        if (new_trigger->key > KeyList::NOT_SET && current_key->target != new_trigger->key) {
+                            current_key->trigger = new_trigger->key;
+                            current_key->trigger_type = new_trigger->type;
+                        }
                     }
 
                     ImGui::TableSetColumnIndex(1);
                     
-                    int new_target_key = ImGuiCustom::hotkey("target", &current_key->target);
+                    PressedKeyData* new_target = ImGuiCustom::hotkey("target", &current_key->target);
 
-                    // make sure the target is not equal to the trigger
-                    if (new_target_key > KeyList::NOT_SET && current_key->trigger != new_target_key) {
-                        current_key->target = new_target_key;
+                    if (new_target != nullptr) {
+                        // make sure the target is not equal to the trigger
+                        if (new_target->key > KeyList::NOT_SET && current_key->trigger != new_target->key) {
+                            current_key->target = new_target->key;
+                            current_key->target_type = new_target->type;
+                        }
                     }
 
                     ImGui::EndTable();
