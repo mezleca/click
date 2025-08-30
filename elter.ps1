@@ -37,7 +37,7 @@ function Configure {
         New-Item -ItemType Directory -Path $BUILD_DIR | Out-Null
     }
 
-    cmake -G "MinGW Makefiles" -DBUILD_SHARED_LIBS=OFF -S $PROJ_DIR -B $BUILD_DIR      
+    cmake -G "MinGW Makefiles" -DBUILD_SHARED_LIBS=OFF -DCMAKE_SH="CMAKE_SH-NOTFOUND" -S $PROJ_DIR -B $BUILD_DIR      
 }
 
 function Build {
