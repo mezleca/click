@@ -7,9 +7,6 @@ $env:CXX = "g++"
 $PROJ_DIR = ".\"
 $BUILD_DIR = ".\build"
 
-# temp
-# winget install Kitware.CMake
-
 function ShowHelp {
     Write-Host "usage: .\build.ps1 [--configure|--build|--clean|--build-clean|--run]"
     Write-Host "--configure: configure project"

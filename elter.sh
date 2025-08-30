@@ -14,7 +14,6 @@ PROJ_DIR="./"
 BUILD_DIR="./build"
 
 download_cpm() {
-
     # create cpm folder
     if [[ ! -d "./CPM" ]]; then
         mkdir -p "./CPM"
@@ -26,7 +25,6 @@ download_cpm() {
 }
 
 configure() {
-
     if [[ ! -f "./CPM/CPM.cmake" ]]; then
         download_cpm
     fi
@@ -47,7 +45,6 @@ configure() {
 }
 
 build() {
-
     if [ ! -d "$BUILD_DIR" ]; then
         configure
     fi
