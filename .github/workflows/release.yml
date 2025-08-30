@@ -49,7 +49,8 @@ jobs:
                       libglu1-mesa-dev \
                       libglfw3-dev \
                       libglew-dev \
-                      xorg-dev
+                      xorg-dev \
+                      libxkbcommon-dev
 
             - name: ensure build script perms
               run: chmod +x ./elter.sh
@@ -99,6 +100,13 @@ jobs:
             - name: install system dependencies
               run: |
                   choco install mingw -y
+
+            - name: remove
+              run: |
+                  # attempt to remvoe sh from path
+                  set PATH=%PATH:C:\Program Files\Git\bin;=%
+                  set PATH=%PATH:C:\Program Files\Git\usr\bin;=%
+                  powershell ./elter.ps1 --configur
 
             - name: configure
               run: powershell ./elter.ps1 --configure
