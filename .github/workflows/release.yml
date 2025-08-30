@@ -39,7 +39,7 @@ jobs:
             - name: install system dependencies
               run: |
                   sudo apt-get update
-                  sudo apt-get install -y
+                  sudo apt-get install -y \
                       dpkg-dev \
                       build-essential \
                       libxi-dev \
@@ -88,10 +88,17 @@ jobs:
               with:
                   args: -h
 
+            - name: Setup cmake
+              uses: jwlawson/actions-setup-cmake@v2
+              with:
+                  cmake-version: '3.16.x'
+
+            - name: Use cmake
+              run: cmake --version
+
             - name: install system dependencies
               run: |
                   choco install mingw -y
-                  winget install Kitware.CMake --silent --accept-package-agreements --accept-source-agreements
 
             - name: configure
               run: powershell ./elter.ps1 --configure
