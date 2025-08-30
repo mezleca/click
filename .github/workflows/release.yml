@@ -104,8 +104,7 @@ jobs:
             - name: fix shit 1
               run: |
                   # attempt to remvoe sh from path
-                  set PATH=%PATH:C:\Program Files\Git\bin;=%
-                  set PATH=%PATH:C:\Program Files\Git\usr\bin;=%
+                  $env:PATH = ($env:PATH -split ';' | Where-Object { $_ -notlike '*Git*' }) -join ';'
 
             - name: configure
               run: powershell ./elter.ps1 --configure
