@@ -1,7 +1,14 @@
 param ( [Parameter(Position=0)] [string]$action = "--help" )
 
+# force gcc (by default it tries to use msvc)
+$env:CC = "gcc"
+$env:CXX = "g++"
+
 $PROJ_DIR = ".\"
 $BUILD_DIR = ".\build"
+
+# temp
+# winget install Kitware.CMake
 
 function ShowHelp {
     Write-Host "usage: .\build.ps1 [--configure|--build|--clean|--build-clean|--run]"
@@ -64,7 +71,7 @@ function Run {
 
 switch ($action) {
     "--help" { ShowHelp }
-    "" { Run }
+    "--run" { Run }
     "--configure" { Configure }
     "--build" { Build }
     "--clean-build" {

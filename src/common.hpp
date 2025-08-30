@@ -4,7 +4,6 @@
 #endif
 #include <cstdlib>
 #include <iostream>
-#include <unistd.h>
 #include <chrono>
 #include <thread>
 #include <string>

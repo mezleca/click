@@ -56,10 +56,12 @@ std::string Input::to_string(int vKey) {
 }
 
 void Input::remove_key(PressedKeyData key_data) {
-    auto it = std::find(keys.begin(), keys.end(), key_data);
+    auto it = std::find_if(keys.begin(), keys.end(), [&key_data](const PressedKeyData& pressed) {
+        return pressed.key == key_data.key && pressed.type == key_data.type;
+    });
+    
     if (it != keys.end()) {
-        int index = std::distance(keys.begin(), it);
-        keys.erase(keys.begin() + index);
+        keys.erase(it);
     }
 }
 
@@ -67,13 +69,23 @@ void Input::remove_key(PressedKeyData key_data) {
 
 LRESULT CALLBACK Input::kbHook(int code, WPARAM w, LPARAM l) {
     if (code == HC_ACTION) {
-
+        PressedKeyData pressed_key;
         KBDLLHOOKSTRUCT* kb = reinterpret_cast<KBDLLHOOKSTRUCT*>(l);
 
-        if (kb->flags == 0) {
-            keys.push_back(kb->vkCode);
-        } else {
-            remove_key(kb->vkCode);
+        pressed_key.key = kb->vkCode;
+        pressed_key.type = PressedKeyType::KEYBOARD;
+
+        if (w == WM_KEYDOWN || w == WM_SYSKEYDOWN) {
+            // prevent duplcated keys
+            auto existing = std::find_if(keys.begin(), keys.end(), [&pressed_key](const PressedKeyData& pressed) {
+                return pressed.key == pressed_key.key && pressed.type == pressed_key.type;
+            });
+            
+            if (existing == keys.end()) {
+                keys.push_back(pressed_key);
+            }
+        } else if (w == WM_KEYUP || w == WM_SYSKEYUP) {
+            remove_key(pressed_key);
         }
 
         // std::cout << "kb key: " << kb->vkCode << " flags: " << kb->flags << " scode: " << kb->scanCode <<"\n";
@@ -84,7 +96,6 @@ LRESULT CALLBACK Input::kbHook(int code, WPARAM w, LPARAM l) {
 
 LRESULT CALLBACK Input::msHook(int code, WPARAM w, LPARAM l) {
     if (code == HC_ACTION) {
-
         MSLLHOOKSTRUCT* ms = reinterpret_cast<MSLLHOOKSTRUCT*>(l);
 
         if (w == WM_MOUSEMOVE) {
@@ -92,41 +103,51 @@ LRESULT CALLBACK Input::msHook(int code, WPARAM w, LPARAM l) {
         }
 
         UINT key = HIWORD(ms->mouseData);
+        PressedKeyData pressed_key;
+        pressed_key.type = PressedKeyType::MOUSE;
 
         switch (w)
         {
-            case WM_LBUTTONDOWN:    
-                keys.push_back(KeyList::LEFT);
+            case WM_LBUTTONDOWN:
+                pressed_key.key = KeyList::LEFT;
+                keys.push_back(pressed_key);
                 break; 
             case WM_LBUTTONUP:
-                remove_key(KeyList::LEFT);
+                pressed_key.key = KeyList::LEFT;
+                remove_key(pressed_key);
                 break;
             case WM_RBUTTONDOWN:
-                keys.push_back(KeyList::RIGHT);
+                pressed_key.key = KeyList::RIGHT;
+                keys.push_back(pressed_key);
                 break; 
             case WM_RBUTTONUP:
-                remove_key(KeyList::RIGHT);
+                pressed_key.key = KeyList::RIGHT;
+                remove_key(pressed_key);
                 break;
             case WM_MBUTTONDOWN:
-                keys.push_back(KeyList::MIDDLE);
+                pressed_key.key = KeyList::MIDDLE;
+                keys.push_back(pressed_key);
                 break; 
             case WM_MBUTTONUP:
-                remove_key(KeyList::MIDDLE);
+                pressed_key.key = KeyList::MIDDLE;
+                remove_key(pressed_key);
                 break;
             case WM_XBUTTONDOWN: {
                 if (key == XBUTTON1) {
-                    keys.push_back(KeyList::MOUSE4);
+                    pressed_key.key = KeyList::MOUSE4;
                 } else {               
-                    keys.push_back(KeyList::MOUSE5);
+                    pressed_key.key = KeyList::MOUSE5;
                 }
+                keys.push_back(pressed_key);
                 break;
             }
             case WM_XBUTTONUP: {
                 if (key == XBUTTON1) {
-                    remove_key(KeyList::MOUSE4);
+                    pressed_key.key = KeyList::MOUSE4;
                 } else {               
-                    remove_key(KeyList::MOUSE5);
+                    pressed_key.key = KeyList::MOUSE5;
                 }
+                remove_key(pressed_key);
                 break;
             }
         }
@@ -175,11 +196,11 @@ void Input::other_press(WORD xButton) {
 
     input[0].type = INPUT_MOUSE;
     input[0].mi.dwFlags = MOUSEEVENTF_XDOWN;
-    input[0].mi.mouseData = KeyList::MOUSE4 ? 1 : 2;
+    input[0].mi.mouseData = xButton;
 
     input[1].type = INPUT_MOUSE;
     input[1].mi.dwFlags = MOUSEEVENTF_XUP;
-    input[1].mi.mouseData = KeyList::MOUSE4 ? 1 : 2;
+    input[1].mi.mouseData = xButton;
 
     // send up/down keypress
     SendInput(2, input, sizeof(INPUT));
@@ -319,7 +340,8 @@ void Input::click(int vKey) {
         if (vKey <= KeyList::MIDDLE) {
             normal_press(vKey, false);
         } else {
-            other_press(vKey);
+            WORD xbtn = (vKey == KeyList::MOUSE4) ? XBUTTON1 : XBUTTON2;
+            other_press(xbtn);
         }
     } else {
         normal_press(vKey, true);

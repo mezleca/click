@@ -5,12 +5,6 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif()
 
-# you may need to change this
-if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
-    set(CMAKE_C_COMPILER "C:\\MinGW\\bin\\gcc.exe")
-    set(CMAKE_CXX_COMPILER "C:\\MinGW\\bin\\g++.exe")
-endif()
-
 # force c++ 17
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

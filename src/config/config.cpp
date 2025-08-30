@@ -24,7 +24,6 @@ void Config::create_file(std::string name, std::string content = "") {
 }
 
 void Config::initialize() {
-
     std::string file_name = "config.json";
     KeyData default_key;
 
@@ -66,7 +65,6 @@ void Config::initialize() {
 
     // add the keys to the config struct
     for (unsigned int i = 0; i < keys.size(); i++) {
-        
         const Json::Value key = keys[i];
 
         if (!key.isMember("trigger") || !key.isMember("target") || !key.isMember("cps")) {
