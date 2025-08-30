@@ -101,12 +101,11 @@ jobs:
               run: |
                   choco install mingw -y
 
-            - name: remove
+            - name: fix shit 1
               run: |
                   # attempt to remvoe sh from path
                   set PATH=%PATH:C:\Program Files\Git\bin;=%
                   set PATH=%PATH:C:\Program Files\Git\usr\bin;=%
-                  powershell ./elter.ps1 --configur
 
             - name: configure
               run: powershell ./elter.ps1 --configure
